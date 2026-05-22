@@ -171,35 +171,56 @@ elif halaman == "📊 Explore & Explain Data":
     st.subheader("📊 Visualisasi Distribusi Data")
 
     # ── SECTION 1: DONUT CHART TRAIN & TEST ──
-    st.markdown("### 🍩 Distribusi Kelas (Train & Test)")
-    col1, col2 = st.columns(2)
+    st.markdown("### 🍩 Distribusi Dataset")
 
-    df_train = pd.DataFrame(list(data_train_before.items()), columns=["Kelas", "Jumlah"])
-    df_test  = pd.DataFrame(list(data_test_before.items()),  columns=["Kelas", "Jumlah"])
+    # Data asli total (train + test sebelum split)
+    data_total = {
+        "Blast":      2587,
+        "Brown Spot": 3293,
+        "Healthy":    2597,
+        "Tungro":     2352,
+    }
+    total_semua = sum(data_total.values())
+ 
     warna_kelas = ["#ef5350", "#ff7043", "#66bb6a", "#ffa726"]
+ 
+    # Metric row
+    mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+    mc1.metric("Total Dataset", f"{total_semua:,}")
+    mc2.metric("Blast",      f"{data_total['Blast']:,}")
+    mc3.metric("Brown Spot", f"{data_total['Brown Spot']:,}")
+    mc4.metric("Healthy",    f"{data_total['Healthy']:,}")
+    mc5.metric("Tungro",     f"{data_total['Tungro']:,}")
 
-    with col1:
-        st.markdown("**Data Train (Sebelum Augmentasi)**")
-        fig_train = px.pie(
-            df_train, values="Jumlah", names="Kelas",
+    
+col_donut, col_spacer = st.columns([1, 1])
+    with col_donut:
+        df_total = pd.DataFrame(list(data_total.items()), columns=["Kelas", "Jumlah"])
+        fig_donut = px.pie(
+            df_total, values="Jumlah", names="Kelas",
             color_discrete_sequence=warna_kelas,
-            hole=0.45
+            hole=0.5
         )
-        fig_train.update_traces(textinfo="percent+label")
-        fig_train.update_layout(showlegend=True, margin=dict(t=30, b=10))
-        st.plotly_chart(fig_train, use_container_width=True)
-
-    with col2:
-        st.markdown("**Data Test**")
-        fig_test = px.pie(
-            df_test, values="Jumlah", names="Kelas",
-            color_discrete_sequence=warna_kelas,
-            hole=0.45
+        fig_donut.update_traces(textinfo="percent")
+        fig_donut.update_layout(
+            showlegend=True,
+            margin=dict(t=30, b=10),
+            annotations=[dict(text=f"<b>{total_semua:,}</b><br>gambar", x=0.5, y=0.5,
+                              font_size=14, showarrow=False)]
         )
-        fig_test.update_traces(textinfo="percent+label")
-        fig_test.update_layout(showlegend=True, margin=dict(t=30, b=10))
-        st.plotly_chart(fig_test, use_container_width=True)
-
+        st.plotly_chart(fig_donut, use_container_width=True)
+    with col_spacer:
+        st.markdown("""
+        <br><br>
+        Dataset ini mencakup **4 kelas** kondisi daun padi yang dikumpulkan dari berbagai kondisi lapangan.
+ 
+        - **Brown Spot** menjadi kelas terbanyak dengan 3.293 gambar
+        - **Tungro** menjadi kelas paling sedikit dengan 2.352 gambar
+ 
+        Dataset kemudian dibagi **80% train / 20% test**, lalu data train 
+        diaugmentasi menjadi **2.000 gambar per kelas** agar seimbang.
+        """, unsafe_allow_html=True)
+ 
     st.divider()
 
     # ── SECTION 2: BAR CHART PERBANDINGAN TRAIN VS TEST ──
@@ -225,49 +246,41 @@ elif halaman == "📊 Explore & Explain Data":
     st.markdown("### ⚖️ Distribusi Data Train: Sebelum vs Sesudah Augmentasi")
     st.write("Augmentasi dilakukan hanya pada data train untuk menyeimbangkan jumlah tiap kelas menjadi **2.000 gambar per kelas**.")
 
-    df_before = pd.DataFrame({
-        "Kelas": kelas_label,
-        "Jumlah": [data_train_before[l] for l in kelas_label]
-    })
-    df_after = pd.DataFrame({
-        "Kelas": kelas_label,
-        "Jumlah": [data_train_after[l] for l in kelas_label]
-    })
+    pilihan_aug = st.selectbox(
+        "Tampilkan kondisi:",
+        options=["Sebelum Augmentasi", "Sesudah Augmentasi"],
+        index=0
+    )
+ 
+    if pilihan_aug == "Sebelum Augmentasi":
+        df_aug = pd.DataFrame({
+            "Kelas":  kelas_label,
+            "Jumlah": [data_train_before[l] for l in kelas_label]
+        })
+        judul_aug = "Distribusi Data Train — Sebelum Augmentasi"
+    else:
+        df_aug = pd.DataFrame({
+            "Kelas":  kelas_label,
+            "Jumlah": [data_train_after[l] for l in kelas_label]
+        })
+        judul_aug = "Distribusi Data Train — Sesudah Augmentasi"
+ 
+    fig_aug = px.bar(
+        df_aug, x="Kelas", y="Jumlah",
+        color="Kelas",
+        color_discrete_sequence=warna_kelas,
+        text="Jumlah",
+        title=judul_aug
+    )
+    fig_aug.update_traces(textposition="outside")
+    fig_aug.update_layout(
+        showlegend=False,
+        yaxis_title="Jumlah Gambar",
+        yaxis_range=[0, 2300]
+    )
+    st.plotly_chart(fig_aug, use_container_width=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Sebelum Augmentasi**")
-        fig_before = px.bar(
-            df_before, x="Kelas", y="Jumlah",
-            color="Kelas",
-            color_discrete_sequence=warna_kelas,
-            text="Jumlah"
-        )
-        fig_before.update_traces(textposition="outside")
-        fig_before.update_layout(
-            showlegend=False,
-            yaxis_title="Jumlah Gambar",
-            yaxis_range=[0, 2300]
-        )
-        st.plotly_chart(fig_before, use_container_width=True)
-
-    with col2:
-        st.markdown("**Sesudah Augmentasi**")
-        fig_after = px.bar(
-            df_after, x="Kelas", y="Jumlah",
-            color="Kelas",
-            color_discrete_sequence=warna_kelas,
-            text="Jumlah"
-        )
-        fig_after.update_traces(textposition="outside")
-        fig_after.update_layout(
-            showlegend=False,
-            yaxis_title="Jumlah Gambar",
-            yaxis_range=[0, 2300]
-        )
-        st.plotly_chart(fig_after, use_container_width=True)
-
-    # Tabel ringkasan delta
+    # Tabel ringkasan
     df_delta = pd.DataFrame({
         "Kelas":           kelas_label,
         "Sebelum (Train)": [data_train_before[l] for l in kelas_label],
@@ -377,10 +390,10 @@ elif halaman == "📊 Explore & Explain Data":
 # ─────────────────────────────────────────────
 # HALAMAN 3: GALERI SAMPEL GAMBAR
 # ─────────────────────────────────────────────
-elif halaman == "🖼️ Galeri Sampel Gambar":
-    st.subheader("🖼️ Galeri Sampel Gambar Per Kelas")
+elif halaman == "🖼️ Sampel Gambar":
+    st.subheader("🖼️ Sampel Gambar Per Kelas")
 
-    col_sel, col_jml = st.columns([2, 1])
+col_sel, col_jml = st.columns([2, 1])
     with col_sel:
         kelas_dipilih = st.selectbox("Pilih Kelas Penyakit:", kelas_label)
     with col_jml:
@@ -390,10 +403,10 @@ elif halaman == "🖼️ Galeri Sampel Gambar":
             index=3,   # default 4
             format_func=lambda x: f"{x} gambar"
         )
-
+ 
     folder_dipilih = label_to_folder[kelas_dipilih]
     folder_path    = os.path.join(BASE_PATH, "train", folder_dipilih)
-
+ 
     if os.path.exists(folder_path):
         semua_gambar = (
             glob.glob(os.path.join(folder_path, "*.jpg")) +
@@ -413,7 +426,7 @@ elif halaman == "🖼️ Galeri Sampel Gambar":
             st.warning("Tidak ada gambar ditemukan di folder ini.")
     else:
         st.error(f"Folder tidak ditemukan: `{folder_path}`")
-
+ 
 # ─────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────
