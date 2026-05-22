@@ -7,6 +7,59 @@ import plotly.graph_objects as go
 from PIL import Image
 import os
 import glob
+import zipfile
+
+# ─────────────────────────────────────────────
+# DOWNLOAD DATASET DARI GOOGLE DRIVE
+# ─────────────────────────────────────────────
+@st.cache_resource
+def download_dataset():
+    import gdown
+    ZIP_ID   = "1RsW4hC-pI67eMPFnVKX6wFTbtQn7TjAE"
+    ZIP_PATH = "dataset.zip"
+    BASE_PATH = "data/split"
+
+    if os.path.exists(BASE_PATH):
+        return BASE_PATH
+
+    # Download zip dari Google Drive
+    gdown.download(id=ZIP_ID, output=ZIP_PATH, quiet=False)
+
+    # Extract zip
+    with zipfile.ZipFile(ZIP_PATH, "r") as z:
+        z.extractall(".")
+
+    # Hapus zip setelah extract
+    os.remove(ZIP_PATH)
+
+    return BASE_PATH
+
+# Jalankan download saat app pertama kali dibuka
+with st.spinner("⏳ Memuat dataset..."):
+    BASE_PATH = download_dataset()
+
+# kelas_folder = nama folder asli di disk
+# kelas_label  = nama tampilan di dashboard
+kelas_folder = ["Blast", "BrownSpot", "Healthy", "Tungro"]
+kelas_label  = ["Blast", "Brown Spot", "Healthy", "Tungro"]
+folder_to_label = dict(zip(kelas_folder, kelas_label))
+label_to_folder = dict(zip(kelas_label,  kelas_folder))
+
+# ─────────────────────────────────────────────
+# HITUNG JUMLAH DATA ASLI DARI FOLDER
+# ─────────────────────────────────────────────
+@st.cache_data
+def hitung_data(base_path):
+    data_train = {}
+    data_test  = {}
+    for folder, label in folder_to_label.items():
+        path_train = os.path.join(base_path, "train", folder)
+        path_test  = os.path.join(base_path, "test",  folder)
+        data_train[label] = len(glob.glob(os.path.join(path_train, "*.jpg"))) if os.path.exists(path_train) else 0
+        data_test[label]  = len(glob.glob(os.path.join(path_test,  "*.jpg"))) if os.path.exists(path_test)  else 0
+    return data_train, data_test
+
+data_train, data_test = hitung_data(BASE_PATH)
 
 # ─────────────────────────────────────────────
 # KONFIGURASI HALAMAN
@@ -17,9 +70,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ─────────────────────────────────────────────
-# CSS SEDERHANA
-# ─────────────────────────────────────────────
 st.markdown("""
     <style>
         .main-title {
@@ -33,12 +83,6 @@ st.markdown("""
             color: #555;
             text-align: center;
             margin-bottom: 20px;
-        }
-        .section-header {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #1b5e20;
-            margin-top: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -66,15 +110,6 @@ with st.sidebar:
     st.caption("Tim Data Scientist: Rifa Agnia & Nisa Nuraini")
 
 # ─────────────────────────────────────────────
-# DATA DUMMY (ganti dengan data asli kamu ya!)
-# ─────────────────────────────────────────────
-# Sesuaikan jumlah ini dengan dataset asli kamu
-data_train = {"Blast": 320, "Brown Spot": 290, "Tungro": 260, "Healthy": 400}
-data_test  = {"Blast": 80,  "Brown Spot": 70,  "Tungro": 65,  "Healthy": 100}
-
-kelas_list = ["Blast", "Brown Spot", "Tungro", "Healthy"]
-
-# ─────────────────────────────────────────────
 # HALAMAN 1: OVERVIEW & DATA DICTIONARY
 # ─────────────────────────────────────────────
 if halaman == "📋 Overview & Data Dictionary":
@@ -82,7 +117,7 @@ if halaman == "📋 Overview & Data Dictionary":
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total Kelas", "4")
     col2.metric("Total Data Train", sum(data_train.values()))
-    col3.metric("Total Data Test", sum(data_test.values()))
+    col3.metric("Total Data Test",  sum(data_test.values()))
     col4.metric("Target Akurasi", "≥ 85%")
 
     st.divider()
@@ -98,7 +133,7 @@ if halaman == "📋 Overview & Data Dictionary":
             "Tinggi gambar dalam piksel (standar: 224px setelah resize)",
             "Mode warna gambar (RGB)"
         ],
-        "Contoh Nilai": ["blast_001.jpg", "Blast", "Train", "224", "224", "RGB"]
+        "Contoh Nilai": ["Blast_0001.jpg", "Blast", "Train", "224", "224", "RGB"]
     }
     st.dataframe(pd.DataFrame(dict_data), use_container_width=True)
 
@@ -124,18 +159,12 @@ if halaman == "📋 Overview & Data Dictionary":
 elif halaman == "📊 Visualisasi EDA":
     st.subheader("📊 Visualisasi Distribusi Data")
 
-    # Filter dataset
-    pilihan_split = st.radio(
-        "Pilih Dataset:",
-        ["Data Train", "Data Test"],
-        horizontal=True
-    )
+    pilihan_split = st.radio("Pilih Dataset:", ["Data Train", "Data Test"], horizontal=True)
 
     data_dipilih = data_train if pilihan_split == "Data Train" else data_test
     df = pd.DataFrame(list(data_dipilih.items()), columns=["Kelas", "Jumlah"])
 
     col1, col2 = st.columns(2)
-
     with col1:
         st.markdown(f"**Pie Chart Distribusi {pilihan_split}**")
         fig_pie = px.pie(
@@ -159,11 +188,9 @@ elif halaman == "📊 Visualisasi EDA":
         st.plotly_chart(fig_bar, use_container_width=True)
 
     st.divider()
-
-    # Perbandingan Train vs Test
     st.markdown("**📊 Perbandingan Jumlah Data Train vs Test per Kelas**")
     df_compare = pd.DataFrame({
-        "Kelas": kelas_list,
+        "Kelas": kelas_label,
         "Train": list(data_train.values()),
         "Test":  list(data_test.values())
     })
@@ -176,40 +203,36 @@ elif halaman == "📊 Visualisasi EDA":
     fig_group.update_traces(textposition="outside")
     st.plotly_chart(fig_group, use_container_width=True)
 
-    # Cek imbalance
     st.divider()
     st.markdown("**⚖️ Analisis Keseimbangan Data (Imbalance Check)**")
-    max_val = max(data_train.values())
-    min_val = min(data_train.values())
-    rasio = round(max_val / min_val, 2)
-
-    if rasio > 1.5:
-        st.warning(f"⚠️ Rasio kelas terbesar vs terkecil: **{rasio}x** — Data kemungkinan **tidak seimbang**. Disarankan melakukan oversampling pada kelas minoritas.")
-    else:
-        st.success(f"✅ Rasio kelas terbesar vs terkecil: **{rasio}x** — Data relatif **seimbang**.")
+    vals = [v for v in data_train.values() if v > 0]
+    if vals:
+        rasio = round(max(vals) / min(vals), 2)
+        if rasio > 1.5:
+            st.warning(f"⚠️ Rasio kelas terbesar vs terkecil: **{rasio}x** — Data kemungkinan **tidak seimbang**. Disarankan melakukan oversampling pada kelas minoritas.")
+        else:
+            st.success(f"✅ Rasio kelas terbesar vs terkecil: **{rasio}x** — Data relatif **seimbang**.")
 
 # ─────────────────────────────────────────────
 # HALAMAN 3: GALERI SAMPEL GAMBAR
 # ─────────────────────────────────────────────
 elif halaman == "🖼️ Galeri Sampel Gambar":
     st.subheader("🖼️ Galeri Sampel Gambar Per Kelas")
-    st.info("💡 Pastikan folder dataset sudah tersedia di path yang sesuai. Sesuaikan variabel `BASE_PATH` di kode.")
 
-    # ⚠️ SESUAIKAN PATH INI dengan struktur folder dataset kamu
-    BASE_PATH = "./dataset"  # Contoh: "./dataset/train/Blast/"
+    kelas_dipilih  = st.selectbox("Pilih Kelas Penyakit:", kelas_label)
+    jumlah_gambar  = st.slider("Jumlah sampel yang ingin ditampilkan:", 1, 10, 4)
 
-    kelas_dipilih = st.selectbox("Pilih Kelas Penyakit:", kelas_list)
-    jumlah_gambar = st.slider("Jumlah sampel yang ingin ditampilkan:", 1, 10, 4)
-
-    folder_path = os.path.join(BASE_PATH, "train", kelas_dipilih)
+    # Konversi label tampilan -> nama folder asli (BrownSpot, bukan Brown Spot)
+    folder_dipilih = label_to_folder[kelas_dipilih]
+    folder_path    = os.path.join(BASE_PATH, "train", folder_dipilih)
 
     if os.path.exists(folder_path):
         semua_gambar = glob.glob(os.path.join(folder_path, "*.jpg")) + \
                        glob.glob(os.path.join(folder_path, "*.JPG")) + \
                        glob.glob(os.path.join(folder_path, "*.png"))
-
         if semua_gambar:
-            sampel = semua_gambar[:jumlah_gambar]
+            import random
+            sampel = random.sample(semua_gambar, min(jumlah_gambar, len(semua_gambar)))
             cols = st.columns(min(jumlah_gambar, 4))
             for i, path_gambar in enumerate(sampel):
                 with cols[i % 4]:
@@ -218,14 +241,7 @@ elif halaman == "🖼️ Galeri Sampel Gambar":
         else:
             st.warning("Tidak ada gambar ditemukan di folder ini.")
     else:
-        # Kalau dataset belum ada, tampilkan placeholder
-        st.warning(f"Folder `{folder_path}` belum ditemukan. Sesuaikan BASE_PATH dengan lokasi dataset kamu.")
-        st.markdown("**Contoh tampilan galeri (placeholder):**")
-        cols = st.columns(4)
-        for i in range(min(jumlah_gambar, 4)):
-            with cols[i]:
-                placeholder = np.random.randint(50, 200, (224, 224, 3), dtype=np.uint8)
-                st.image(placeholder, caption=f"{kelas_dipilih} - Sample {i+1}", use_column_width=True)
+        st.error(f"Folder tidak ditemukan: `{folder_path}`")
 
 # ─────────────────────────────────────────────
 # HALAMAN 4: ANALISIS PIKSEL & WARNA
@@ -240,36 +256,43 @@ elif halaman == "🔬 Analisis Piksel & Warna":
         st.markdown("**Rata-rata Piksel (Mean Image) per Kelas Penyakit**")
         st.write("Visualisasi ini menunjukkan karakteristik warna dan tekstur rata-rata dari setiap kelas penyakit.")
 
-        BASE_PATH = "./dataset"  # Sesuaikan path
-
-        fig, axes = plt.subplots(1, 4, figsize=(16, 4))
-        warna_judul = ["#ef5350", "#ff7043", "#ffa726", "#66bb6a"]
-
-        for idx, kelas in enumerate(kelas_list):
-            folder_path = os.path.join(BASE_PATH, "train", kelas)
-
-            if os.path.exists(folder_path):
+        @st.cache_data
+        def hitung_mean_image(base_path):
+            hasil = {}
+            hasil_rgb = {}
+            for folder, label in folder_to_label.items():
+                folder_path  = os.path.join(base_path, "train", folder)
                 semua_gambar = glob.glob(os.path.join(folder_path, "*.jpg"))[:50]
                 if semua_gambar:
                     arrays = []
                     for p in semua_gambar:
                         img = Image.open(p).resize((224, 224)).convert("RGB")
                         arrays.append(np.array(img))
-                    mean_img = np.mean(arrays, axis=0).astype(np.uint8)
+                    mean_arr = np.mean(arrays, axis=0).astype(np.uint8)
+                    hasil[label]     = mean_arr
+                    hasil_rgb[label] = {
+                        "R": float(mean_arr[:,:,0].mean()),
+                        "G": float(mean_arr[:,:,1].mean()),
+                        "B": float(mean_arr[:,:,2].mean())
+                    }
                 else:
-                    mean_img = np.random.randint(80, 180, (224, 224, 3), dtype=np.uint8)
-            else:
-                # Placeholder kalau dataset belum ada
-                mean_img = np.random.randint(80, 180, (224, 224, 3), dtype=np.uint8)
+                    placeholder = np.random.randint(80, 180, (224, 224, 3), dtype=np.uint8)
+                    hasil[label]     = placeholder
+                    hasil_rgb[label] = {"R": 128.0, "G": 128.0, "B": 128.0}
+            return hasil, hasil_rgb
 
-            axes[idx].imshow(mean_img)
-            axes[idx].set_title(kelas, color=warna_judul[idx], fontweight="bold")
+        with st.spinner("Menghitung mean image dari dataset..."):
+            mean_images, rgb_per_kelas = hitung_mean_image(BASE_PATH)
+
+        fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+        warna_judul = ["#ef5350", "#ff7043", "#66bb6a", "#ffa726"]
+        for idx, label in enumerate(kelas_label):
+            axes[idx].imshow(mean_images[label])
+            axes[idx].set_title(label, color=warna_judul[idx], fontweight="bold")
             axes[idx].axis("off")
-
         plt.suptitle("Mean Image per Kelas", fontsize=14, fontweight="bold")
         st.pyplot(fig)
 
-        # Analisis kritis
         with st.expander("💡 Lihat Analisis Potensi Bias Model (PENTING — Baca Ini!)"):
             st.warning("""
             **⚠️ Temuan Kritis: Bias Background pada Kelas Healthy**
@@ -286,29 +309,25 @@ elif halaman == "🔬 Analisis Piksel & Warna":
             """)
             st.info("""
             **✅ Rekomendasi untuk Tim AI Engineer (Fransiskus & Wega):**
-            
+
             Disarankan menggunakan teknik Data Augmentation yang lebih agresif seperti 
             Random Brightness & Contrast, atau melakukan Background Segmentation (crop daun) 
             agar model terpaksa fokus pada objek daun, bukan warna latar belakangnya.
             """)
 
         st.divider()
-
-        # Distribusi RGB per kelas
-        st.markdown("**📊 Distribusi Rata-rata Nilai RGB per Kelas**")
-        rgb_data = {
-            "Kelas":   kelas_list,
-            "R (Red)": [145, 132, 138, 160],   # Ganti dengan nilai asli dari dataset kamu
-            "G (Green)":[112, 125, 118, 135],
-            "B (Blue)": [78,  85,  80,  95]
-        }
-        df_rgb = pd.DataFrame(rgb_data)
-
+        st.markdown("**📊 Distribusi Rata-rata Nilai RGB per Kelas (dari data asli)**")
+        df_rgb = pd.DataFrame({
+            "Kelas":    kelas_label,
+            "R (Red)":  [rgb_per_kelas[l]["R"] for l in kelas_label],
+            "G (Green)":[rgb_per_kelas[l]["G"] for l in kelas_label],
+            "B (Blue)": [rgb_per_kelas[l]["B"] for l in kelas_label],
+        })
         fig_rgb = go.Figure()
-        fig_rgb.add_trace(go.Bar(name="R", x=df_rgb["Kelas"], y=df_rgb["R (Red)"],   marker_color="#ef5350"))
-        fig_rgb.add_trace(go.Bar(name="G", x=df_rgb["Kelas"], y=df_rgb["G (Green)"], marker_color="#66bb6a"))
-        fig_rgb.add_trace(go.Bar(name="B", x=df_rgb["Kelas"], y=df_rgb["B (Blue)"],  marker_color="#42a5f5"))
-        fig_rgb.update_layout(barmode="group", title="Rata-rata Nilai RGB per Kelas", yaxis_title="Nilai Piksel (0-255)")
+        fig_rgb.add_trace(go.Bar(name="R", x=df_rgb["Kelas"], y=df_rgb["R (Red)"],    marker_color="#ef5350"))
+        fig_rgb.add_trace(go.Bar(name="G", x=df_rgb["Kelas"], y=df_rgb["G (Green)"],  marker_color="#66bb6a"))
+        fig_rgb.add_trace(go.Bar(name="B", x=df_rgb["Kelas"], y=df_rgb["B (Blue)"],   marker_color="#42a5f5"))
+        fig_rgb.update_layout(barmode="group", title="Rata-rata Nilai RGB per Kelas (data asli)", yaxis_title="Nilai Piksel (0-255)")
         st.plotly_chart(fig_rgb, use_container_width=True)
 
     # ── TAB 2: PIXEL INSPECTOR ─────────────────
@@ -319,7 +338,7 @@ elif halaman == "🔬 Analisis Piksel & Warna":
         uploaded_file = st.file_uploader("Upload foto daun padi (JPG/PNG):", type=["jpg", "jpeg", "png"])
 
         if uploaded_file:
-            img = Image.open(uploaded_file).convert("RGB")
+            img       = Image.open(uploaded_file).convert("RGB")
             img_array = np.array(img)
 
             col1, col2 = st.columns(2)
@@ -330,20 +349,17 @@ elif halaman == "🔬 Analisis Piksel & Warna":
                 - **Mode Warna:** {img.mode}  
                 - **Total Piksel:** {img.size[0] * img.size[1]:,}
                 """)
-
             with col2:
                 tampilan = st.radio("Pilih tampilan:", ["Original", "Grayscale"], horizontal=True)
                 if tampilan == "Grayscale":
-                    img_gray = img.convert("L")
-                    st.image(img_gray, caption="Grayscale", use_column_width=True)
+                    st.image(img.convert("L"), caption="Grayscale", use_column_width=True)
                 else:
                     st.image(img, caption="Original", use_column_width=True)
 
             st.divider()
             st.markdown("**📊 Histogram Distribusi Warna (R, G, B)**")
             fig_hist, ax = plt.subplots(figsize=(10, 3))
-            warna_channel = [("R", "#ef5350"), ("G", "#66bb6a"), ("B", "#42a5f5")]
-            for i, (nama, warna) in enumerate(warna_channel):
+            for i, (nama, warna) in enumerate([("R", "#ef5350"), ("G", "#66bb6a"), ("B", "#42a5f5")]):
                 ax.hist(img_array[:, :, i].ravel(), bins=64, alpha=0.6, color=warna, label=nama)
             ax.set_xlabel("Nilai Piksel (0-255)")
             ax.set_ylabel("Frekuensi")
@@ -351,7 +367,6 @@ elif halaman == "🔬 Analisis Piksel & Warna":
             ax.set_title("Distribusi Histogram RGB")
             st.pyplot(fig_hist)
 
-            # Statistik piksel
             st.divider()
             st.markdown("**📋 Statistik Piksel**")
             col1, col2, col3 = st.columns(3)
