@@ -156,16 +156,16 @@ if halaman == "📋 Overview & Data Dictionary":
     st.dataframe(pd.DataFrame(dict_data), use_container_width=True)
 
     st.divider()
-    st.subheader("🦠 Penjelasan Kelas Penyakit")
+    st.subheader("🍂 Penjelasan Kelas Penyakit pada Daun Padi")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("**🟤 Brown Spot**")
         st.write("Bercak coklat pada daun akibat jamur Helminthosporium oryzae. Menyebabkan biji padi tidak terisi penuh.")
     with col2:
-        st.markdown("**🟡 Blast**")
+        st.markdown("**🟠 Blast**")
         st.write("Penyakit jamur Magnaporthe oryzae yang menyerang daun. Salah satu penyakit paling merusak.")
     with col3:
-        st.markdown("**🟠 Tungro**")
+        st.markdown("**🟡 Tungro**")
         st.write("Disebabkan oleh virus yang ditularkan wereng hijau. Daun menguning dan pertumbuhan terhambat.")
     with col4:
         st.markdown("**🟢 Healthy**")
@@ -178,7 +178,7 @@ elif halaman == "📊 Explore & Explain Data":
     st.subheader("📊 Visualisasi Distribusi Data")
 
     # ── SECTION 1: DONUT CHART TRAIN & TEST ──
-    st.markdown("### 🍩 Distribusi Dataset")
+    st.markdown("### 🗂️ Distribusi Dataset")
 
     # Data asli total (train + test sebelum split)
     data_total = {
@@ -204,7 +204,9 @@ elif halaman == "📊 Explore & Explain Data":
     with col_donut:
         df_total = pd.DataFrame(list(data_total.items()), columns=["Kelas", "Jumlah"])
         fig_donut = px.pie(
-            df_total, values="Jumlah", names="Kelas",
+            df_total, values="Jumlah", 
+            names="Kelas",
+            color="Kelas",
             color_discrete_map=WARNA_KELAS,
             hole=0.5
         )
