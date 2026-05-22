@@ -227,7 +227,7 @@ elif halaman == "📊 Explore & Explain Data":
         * 📈 **Brown Spot** menjadi kelas terbanyak dengan **3.293** gambar.
         * 📉 **Tungro** menjadi kelas paling sedikit dengan **2.352** gambar.
  
-        Dataset kemudian dibagi menjadi **80% train / 20% test**. Khusus untuk data train, tim melakukan teknik **augmentasi data** sehingga jumlahnya seimbang menjadi **2.000 gambar per kelas** demi menghindari risiko model mengalami bias atau *underfitting*.
+        Dataset kemudian dibagi menjadi **80% train dan 20% test**. Khusus untuk data train, kemudian dilakukan **augmentasi data** untuk menyeimbangkan jumlah data menjadi **2.000 gambar per kelas** untuk menghindari bias atau *underfitting*.
         """)
         
     st.divider()
