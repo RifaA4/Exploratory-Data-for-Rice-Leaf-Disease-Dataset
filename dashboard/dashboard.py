@@ -30,7 +30,7 @@ def download_dataset():
     os.remove(ZIP_PATH)
     return EXTRACT_TO
 
-with st.spinner("⏳ Memuat dataset... (hanya sekali saat pertama buka)"):
+with st.spinner("⏳ Memuat dataset..."):
     BASE_PATH = download_dataset()
 
 # ─────────────────────────────────────────────
@@ -41,9 +41,6 @@ kelas_label  = ["Blast", "Brown Spot", "Healthy", "Tungro"]
 folder_to_label = dict(zip(kelas_folder, kelas_label))
 label_to_folder = dict(zip(kelas_label, kelas_folder))
 
-# ─────────────────────────────────────────────
-# DATA HARDCODED (dari hasil split & augmentasi)
-# ─────────────────────────────────────────────
 # Data asli sebelum augmentasi
 data_train_before = {
     "Blast":      1559,
@@ -57,16 +54,16 @@ data_test_before = {
     "Healthy":    452,
     "Tungro":     446,
 }
-# Data setelah augmentasi (train saja yang diaugmentasi → 2000 per kelas)
+# Data train setelah augmentasi
 data_train_after = {
     "Blast":      2000,
     "Brown Spot": 2000,
     "Healthy":    2000,
     "Tungro":     2000,
 }
-data_test_after = data_test_before  # test tidak diaugmentasi
+data_test_after = data_test_before  
 
-# Untuk hitung_data fallback (jika folder tersedia)
+# Untuk hitung data fallback
 @st.cache_data
 def hitung_data(base_path):
     dt = {}
@@ -84,7 +81,7 @@ data_train, data_test = hitung_data(BASE_PATH)
 # KONFIGURASI HALAMAN
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="RiceCare AI - EDA Dashboard",
+    page_title="RiceCare AI - Exploratory Data Analysis",
     page_icon="🌾",
     layout="wide"
 )
@@ -106,7 +103,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🌾 RiceCare AI — EDA Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🌾 RiceCare AI</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Exploratory Data Analysis | Coding Camp 2026 × DBS Foundation | Tim CC26-PSU169</div>', unsafe_allow_html=True)
 st.divider()
 
@@ -114,42 +111,40 @@ st.divider()
 # SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Rice_p1160005.jpg/320px-Rice_p1160005.jpg", use_column_width=True)
+    st.image("https://news.cgtn.com/news/2023-08-09/Chinese-researchers-discover-key-gene-for-rice-yield-increase-1m7pYKIw65O/img/a817995040884e35ac6a878ddec3fed8/a817995040884e35ac6a878ddec3fed8.jpeg", use_column_width=True)
     st.markdown("## 🌾 RiceCare AI")
-    st.markdown("**EDA Dashboard**")
     st.divider()
     halaman = st.radio(
         "Pilih Halaman:",
-        ["📋 Overview & Data Dictionary", "📊 Visualisasi EDA", "🖼️ Galeri Sampel Gambar"]
+        ["📋 Overview & Data Dictionary", "📊 Explore & Explain Data", "🖼️ Images Sample"]
     )
     st.divider()
-    st.caption("Tim Data Scientist: Rifa Agnia & Nisa Nuraini")
+    st.caption("Data Scientist Team: Rifa Agnia & Nisa Nuraini")
 
 # ─────────────────────────────────────────────
-# HALAMAN 1: OVERVIEW & DATA DICTIONARY
+# Halaman 1: OVERVIEW & DATA DICTIONARY
 # ─────────────────────────────────────────────
 if halaman == "📋 Overview & Data Dictionary":
-    st.subheader("📋 Overview Proyek")
+    st.subheader("📋 Project Overview")
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Kelas", "4")
-    col2.metric("Total Data Train (setelah aug)", sum(data_train_after.values()))
-    col3.metric("Total Data Test",  sum(data_test_before.values()))
-    col4.metric("Target Akurasi", "≥ 85%")
+    col1.metric("Kelas", "4")
+    col2.metric("Train Data", sum(data_train_after.values()))
+    col3.metric("Test Data",  sum(data_test_before.values()))
 
     st.divider()
     st.subheader("📖 Data Dictionary")
     dict_data = {
-        "Kolom / Fitur": ["image", "label", "split", "width", "height", "color_mode"],
-        "Tipe Data": ["Image (JPG/PNG)", "String (Kategori)", "String", "Integer", "Integer", "String"],
+        "Atribut": ["format", "label", "split", "width", "height", "color_mode"],
+        "Tipe Data": ["JPG", "String", "String", "Integer", "Integer", "String"],
         "Deskripsi": [
-            "File foto daun padi yang digunakan sebagai input model",
+            "Foto daun padi yang digunakan sebagai input model",
             "Kelas penyakit: Blast, Brown Spot, Tungro, atau Healthy",
             "Pembagian data: Train atau Test",
-            "Lebar gambar dalam piksel (standar: 224px setelah resize)",
-            "Tinggi gambar dalam piksel (standar: 224px setelah resize)",
+            "Lebar gambar dalam piksel (setelah resize)",
+            "Tinggi gambar dalam piksel (setelah resize)",
             "Mode warna gambar (RGB)"
         ],
-        "Contoh Nilai": ["Blast_0001.jpg", "Blast", "Train", "224", "224", "RGB"]
+        "Spesifikasi": ["Blast_0001.jpg", "Blast", "Train", "224", "224", "RGB"]
     }
     st.dataframe(pd.DataFrame(dict_data), use_container_width=True)
 
@@ -158,10 +153,10 @@ if halaman == "📋 Overview & Data Dictionary":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("**🟤 Brown Spot**")
-        st.write("Bercak coklat pada daun akibat jamur Helminthosporium oryzae. Menyebabkan biji padi tidak berisi penuh.")
+        st.write("Bercak coklat pada daun akibat jamur Helminthosporium oryzae. Menyebabkan biji padi tidak terisi penuh.")
     with col2:
         st.markdown("**🟡 Blast**")
-        st.write("Penyakit jamur Magnaporthe oryzae yang menyerang leher malai dan daun. Salah satu penyakit paling merusak.")
+        st.write("Penyakit jamur Magnaporthe oryzae yang menyerang daun. Salah satu penyakit paling merusak.")
     with col3:
         st.markdown("**🟠 Tungro**")
         st.write("Disebabkan oleh virus yang ditularkan wereng hijau. Daun menguning dan pertumbuhan terhambat.")
@@ -170,9 +165,9 @@ if halaman == "📋 Overview & Data Dictionary":
         st.write("Daun padi dalam kondisi sehat, tidak menunjukkan gejala penyakit apapun.")
 
 # ─────────────────────────────────────────────
-# HALAMAN 2: VISUALISASI EDA
+# Halaman 2: VISUALISASI EDA
 # ─────────────────────────────────────────────
-elif halaman == "📊 Visualisasi EDA":
+elif halaman == "📊 Explore & Explain Data":
     st.subheader("📊 Visualisasi Distribusi Data")
 
     # ── SECTION 1: DONUT CHART TRAIN & TEST ──
@@ -228,7 +223,7 @@ elif halaman == "📊 Visualisasi EDA":
 
     # ── SECTION 3: BEFORE vs AFTER AUGMENTASI ──
     st.markdown("### ⚖️ Distribusi Data Train: Sebelum vs Sesudah Augmentasi")
-    st.write("Augmentasi dilakukan **hanya pada data train** untuk menyeimbangkan jumlah tiap kelas menjadi **2.000 gambar per kelas**.")
+    st.write("Augmentasi dilakukan hanya pada data train untuk menyeimbangkan jumlah tiap kelas menjadi **2.000 gambar per kelas**.")
 
     df_before = pd.DataFrame({
         "Kelas": kelas_label,
@@ -286,10 +281,9 @@ elif halaman == "📊 Visualisasi EDA":
         **Distribusi data train sebelum augmentasi tidak seimbang:**
         - Kelas terbanyak (Healthy): **1.804** gambar
         - Kelas tersedikit (Blast): **1.559** gambar
-        - Rasio: ±1.16x — masih moderat, namun tetap bisa menyebabkan bias
 
         **Setelah augmentasi**, semua kelas train menjadi **2.000 gambar** (balanced).
-        Teknik augmentasi yang digunakan: rotasi, flip horizontal/vertikal, brightness & contrast adjustment, dan zoom.
+        Teknik augmentasi yang digunakan: rotasi, flip horizontal/vertikal, brightness & contrast adjustment, dan blur.
         
         Data test **tidak diaugmentasi** agar tetap merepresentasikan kondisi nyata di lapangan.
         """)
@@ -298,7 +292,7 @@ elif halaman == "📊 Visualisasi EDA":
 
     # ── SECTION 4: MEAN IMAGE PER KELAS ──
     st.markdown("### 🖼️ Rata-rata Piksel (Mean Image) per Kelas")
-    st.write("Visualisasi karakteristik warna dan tekstur rata-rata tiap kelas penyakit dari 50 sampel gambar train.")
+    st.write("Visualisasi karakteristik warna dari rata-rata tiap kelas penyakit (50 sampel gambar train)")
 
     @st.cache_data
     def hitung_mean_image(base_path):
@@ -338,22 +332,21 @@ elif halaman == "📊 Visualisasi EDA":
     plt.tight_layout()
     st.pyplot(fig)
 
-    with st.expander("⚠️ Analisis Potensi Bias Model — Baca Ini!"):
+    with st.expander("⚠️ Analisis Potensi Bias Model"):
         st.warning("""
-        **Temuan Kritis: Bias Background pada Kelas Healthy**
+        **Terdapat bias Background pada Kelas Healthy**
 
         Dari mean image di atas, kelas **Healthy** memiliki karakteristik background yang berbeda 
         signifikan dibanding 3 kelas penyakit lainnya (cenderung lebih terang/putih).
 
-        Model MobileNetV2 bisa "malas" belajar — alih-alih mengenali tekstur daun, 
-        model hanya menghafal warna latar belakang. Di lapangan, ketika petani memfoto daun sehat 
-        dengan latar belakang tanah gelap, model bisa salah memprediksi sebagai Blast atau Brown Spot.
+        - Hal ini mengindikasikan bahwa model MobileNetV2 membedakan kelas berdasarkan warna latar belakang, namun tidak dengan profil daun (bias data)
+        - Selain itu, bisa saja cara pengambilan foto dataset Healthy yang berbeda dengan kelas lainnya
         """)
         st.info("""
         **✅ Rekomendasi untuk Tim AI Engineer:**
 
-        Gunakan teknik Data Augmentation yang lebih agresif (Random Brightness & Contrast), 
-        atau lakukan Background Segmentation (crop daun) agar model fokus pada tekstur daun, 
+        Gunakan teknik Data Augmentation tambahan seperti Random Brightness & Contrast, 
+        atau lakukan Background Segmentation agar model fokus pada profil daun, 
         bukan warna latar belakangnya.
         """)
 
@@ -373,7 +366,7 @@ elif halaman == "📊 Visualisasi EDA":
     fig_rgb.add_trace(go.Bar(name="B", x=df_rgb["Kelas"], y=df_rgb["B (Blue)"],   marker_color="#42a5f5"))
     fig_rgb.update_layout(
         barmode="group",
-        title="Rata-rata Nilai RGB per Kelas (dari 50 sampel train per kelas)",
+        title="Rata-rata Nilai RGB per Kelas",
         yaxis_title="Nilai Piksel (0–255)",
         legend_title="Channel",
     )
@@ -405,7 +398,6 @@ elif halaman == "🖼️ Galeri Sampel Gambar":
         semua_gambar = (
             glob.glob(os.path.join(folder_path, "*.jpg")) +
             glob.glob(os.path.join(folder_path, "*.JPG")) +
-            glob.glob(os.path.join(folder_path, "*.png"))
         )
         if semua_gambar:
             import random
