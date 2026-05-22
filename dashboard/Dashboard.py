@@ -40,6 +40,13 @@ kelas_folder = ["Blast", "BrownSpot", "Healthy", "Tungro"]
 kelas_label  = ["Blast", "Brown Spot", "Healthy", "Tungro"]
 folder_to_label = dict(zip(kelas_folder, kelas_label))
 label_to_folder = dict(zip(kelas_label, kelas_folder))
+WARNA_KELAS = {
+    "Blast":      "#FF6B2B",
+    "Brown Spot": "#8B4513",
+    "Healthy":    "#4CAF50",
+    "Tungro":     "#FFC107",
+}
+warna_kelas = [WARNA_KELAS[l] for l in kelas_label]
 
 # Data asli sebelum augmentasi
 data_train_before = {
@@ -198,7 +205,7 @@ elif halaman == "📊 Explore & Explain Data":
         df_total = pd.DataFrame(list(data_total.items()), columns=["Kelas", "Jumlah"])
         fig_donut = px.pie(
             df_total, values="Jumlah", names="Kelas",
-            color_discrete_sequence=warna_kelas,
+            color_discrete_map=WARNA_KELAS,
             hole=0.5
         )
         fig_donut.update_traces(textinfo="percent")
@@ -268,7 +275,7 @@ elif halaman == "📊 Explore & Explain Data":
     fig_aug = px.bar(
         df_aug, x="Kelas", y="Jumlah",
         color="Kelas",
-        color_discrete_sequence=warna_kelas,
+        color_discrete_map=WARNA_KELAS,
         text="Jumlah",
         title=judul_aug
     )
@@ -336,7 +343,7 @@ elif halaman == "📊 Explore & Explain Data":
         mean_images, rgb_per_kelas = hitung_mean_image(BASE_PATH)
 
     fig, axes = plt.subplots(1, 4, figsize=(16, 4))
-    warna_judul = ["#ef5350", "#ff7043", "#66bb6a", "#ffa726"]
+    warna_judul = [WARNA_KELAS[l] for l in kelas_label]
     for idx, label in enumerate(kelas_label):
         axes[idx].imshow(mean_images[label])
         axes[idx].set_title(label, color=warna_judul[idx], fontweight="bold", fontsize=13)
