@@ -397,7 +397,7 @@ elif halaman == "🖼️ Galeri Sampel Gambar":
     if os.path.exists(folder_path):
         semua_gambar = (
             glob.glob(os.path.join(folder_path, "*.jpg")) +
-            glob.glob(os.path.join(folder_path, "*.JPG")) +
+            glob.glob(os.path.join(folder_path, "*.JPG"))
         )
         if semua_gambar:
             import random
