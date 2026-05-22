@@ -12,32 +12,41 @@ import zipfile
 # ─────────────────────────────────────────────
 # DOWNLOAD DATASET DARI GOOGLE DRIVE
 # ─────────────────────────────────────────────
+# Pakai cache_resource supaya download cuma sekali,
+# tidak diulang setiap kali user refresh halaman
 @st.cache_resource
 def download_dataset():
     import gdown
-    ZIP_ID   = "1RsW4hC-pI67eMPFnVKX6wFTbtQn7TjAE"
-    ZIP_PATH = "dataset.zip"
-    BASE_PATH = "data/split"
+    ZIP_ID    = "1RsW4hC-pI67eMPFnVKX6wFTbtQn7TjAE"
+    ZIP_PATH  = "dataset.zip"
+    EXTRACT_TO = "dataset_rice"  # folder tempat extract
 
-    if os.path.exists(BASE_PATH):
-        return BASE_PATH
+    # Kalau folder sudah ada, skip download
+    if os.path.exists(EXTRACT_TO):
+        return EXTRACT_TO
 
     # Download zip dari Google Drive
     gdown.download(id=ZIP_ID, output=ZIP_PATH, quiet=False)
 
-    # Extract zip
+    # Extract zip ke folder dataset_rice/
+    # Struktur asli zip: test/Blast/, train/Blast/, dst
+    # Setelah extract jadi: dataset_rice/test/Blast/, dataset_rice/train/Blast/
     with zipfile.ZipFile(ZIP_PATH, "r") as z:
-        z.extractall(".")
+        z.extractall(EXTRACT_TO)
 
-    # Hapus zip setelah extract
+    # Hapus zip setelah extract biar hemat storage
     os.remove(ZIP_PATH)
 
-    return BASE_PATH
+    return EXTRACT_TO
 
 # Jalankan download saat app pertama kali dibuka
-with st.spinner("⏳ Memuat dataset..."):
+with st.spinner("⏳ Memuat dataset... (hanya sekali saat pertama buka)"):
     BASE_PATH = download_dataset()
 
+# ─────────────────────────────────────────────
+# NAMA FOLDER KELAS (sesuai kode temanmu)
+# Perhatian: temanmu pakai "BrownSpot" tanpa spasi!
+# ─────────────────────────────────────────────
 # kelas_folder = nama folder asli di disk
 # kelas_label  = nama tampilan di dashboard
 kelas_folder = ["Blast", "BrownSpot", "Healthy", "Tungro"]
