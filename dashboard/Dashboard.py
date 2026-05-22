@@ -219,17 +219,17 @@ elif halaman == "📊 Explore & Explain Data":
         )
         st.plotly_chart(fig_donut, use_container_width=True)
     with col_spacer:
-        st.markdown("""
-        <br><br>
+        st.info("""
+        **🔍 Ringkasan Distribusi Dataset:**
+        
         Dataset ini mencakup **4 kelas** kondisi daun padi yang dikumpulkan dari berbagai kondisi lapangan.
  
-        - **Brown Spot** menjadi kelas terbanyak dengan 3.293 gambar
-        - **Tungro** menjadi kelas paling sedikit dengan 2.352 gambar
+        * 📈 **Brown Spot** menjadi kelas terbanyak dengan **3.293** gambar.
+        * 📉 **Tungro** menjadi kelas paling sedikit dengan **2.352** gambar.
  
-        Dataset kemudian dibagi **80% train / 20% test**, lalu data train 
-        diaugmentasi menjadi **2.000 gambar per kelas** agar seimbang.
-        """, unsafe_allow_html=True)
- 
+        Dataset kemudian dibagi menjadi **80% train / 20% test**. Khusus untuk data train, tim melakukan teknik **augmentasi data** sehingga jumlahnya seimbang menjadi **2.000 gambar per kelas** demi menghindari risiko model mengalami bias atau *underfitting*.
+        """)
+        
     st.divider()
 
     # ── SECTION 2: BAR CHART PERBANDINGAN TRAIN VS TEST ──
