@@ -123,10 +123,10 @@ with st.sidebar:
     st.divider()
     halaman = st.radio(
         "Pilih Halaman:",
-        ["📋 Overview & Data Dictionary", "📊 Explore & Explain Data", "🖼️ Images Sample"]
+        ["📋 Overview & Data Dictionary", "📊 Explore & Explain Data", "🖼️ Image Samples"]
     )
     st.divider()
-    st.caption("Data Scientist Team: Rifa Agnia & Nisa Nuraini")
+    st.caption("Data Scientist Team: Nisa Nuraini & Rifa Agnia")
 
 # ─────────────────────────────────────────────
 # Halaman 1: OVERVIEW & DATA DICTIONARY
@@ -394,12 +394,12 @@ elif halaman == "📊 Explore & Explain Data":
     )
     st.plotly_chart(fig_rgb, use_container_width=True)
 
-    st.caption("💡 Nilai G (Green) yang tinggi pada kelas Healthy mengindikasikan daun yang lebih hijau dan segar dibanding kelas penyakit.")
+    st.success("Nilai G (Green) yang tinggi pada kelas Healthy mengindikasikan daun yang lebih hijau dan segar dibanding kelas penyakit.")
 
 # ─────────────────────────────────────────────
 # HALAMAN 3: GALERI SAMPEL GAMBAR
 # ─────────────────────────────────────────────
-elif halaman == "🖼️ Images Sample":
+elif halaman == "🖼️ Image Samples":
     st.subheader("🖼️ Sampel Gambar Per Kelas")
 
     col_sel, col_jml = st.columns([2, 1])
