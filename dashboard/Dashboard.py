@@ -193,7 +193,7 @@ elif halaman == "📊 Explore & Explain Data":
     mc5.metric("Tungro",     f"{data_total['Tungro']:,}")
 
     
-col_donut, col_spacer = st.columns([1, 1])
+    col_donut, col_spacer = st.columns([1, 1])
     with col_donut:
         df_total = pd.DataFrame(list(data_total.items()), columns=["Kelas", "Jumlah"])
         fig_donut = px.pie(
@@ -390,10 +390,10 @@ col_donut, col_spacer = st.columns([1, 1])
 # ─────────────────────────────────────────────
 # HALAMAN 3: GALERI SAMPEL GAMBAR
 # ─────────────────────────────────────────────
-elif halaman == "🖼️ Sampel Gambar":
+elif halaman == "🖼️ Images Sample":
     st.subheader("🖼️ Sampel Gambar Per Kelas")
 
-col_sel, col_jml = st.columns([2, 1])
+    col_sel, col_jml = st.columns([2, 1])
     with col_sel:
         kelas_dipilih = st.selectbox("Pilih Kelas Penyakit:", kelas_label)
     with col_jml:
